@@ -9,23 +9,19 @@ from rest_framework.decorators import api_view
 
 
 executor = futures.ThreadPoolExecutor(max_workers=1)
-global cnt
-cnt = 0
-ServerToken = "abahjsvbdwekvnva"
-url = "http://192.168.160.12:8080/monitoring-requests/user-payment-finish"
+ServerToken = "qwerzxfsdfoiw"
+url = "http://127.0.0.1:8080/api/assembly/discussion/finish"
 
 
 def probability_function():
     if random.random() < 0.8:
-        return "успешно"
+        return "Переговоры с поставщиком успешны"
     else:
-        return "отклонено"
+        return "Переговоры с постащиком провалились"
 
-def get_receipt(req_body):
-    global cnt
-    cnt += 1
+def get_discussion(req_body):
     time.sleep(5)
-    req_body['receipt'] = f"Статус: {probability_function()}  Номер чека: {cnt}, Номер заявки:{req_body['requestId']}, Дата:{time.strftime('%Y-%m-%d %H:%M:%S', time.gmtime())}"
+    req_body['discussion'] = f"{probability_function()}"
     return req_body
 
 def status_callback(task):
@@ -37,10 +33,10 @@ def status_callback(task):
     requests.put(url, data=json.dumps(result), timeout=3)
 
 @api_view(['Put'])
-def addPayment(request):
+def addDiscussion(request):
     req_body = json.loads(request.body)
     if req_body["Server-Token"] == ServerToken:
-        task = executor.submit(get_receipt, req_body)
+        task = executor.submit(get_discussion, req_body)
         task.add_done_callback(status_callback)        
         return Response(status=status.HTTP_200_OK)
     else:
