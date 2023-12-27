@@ -13,31 +13,35 @@ ServerToken = "qwerzxfsdfoiw"
 url = "http://127.0.0.1:8080/api/assembly/discussion/finish"
 
 
-def probability_function():
+def get_random_status():
     if random.random() < 0.8:
         return "Переговоры с поставщиком успешны"
     else:
         return "Переговоры с постащиком провалились"
 
-def get_discussion(req_body):
+
+def modify_body(req_body):
     time.sleep(5)
-    req_body['discussion'] = f"{probability_function()}"
+    req_body['status'] = get_random_status()
     return req_body
 
-def status_callback(task):
+
+def handle_result(task):
     try:
-      result = task.result()
-      print(result)
+        result = task.result()
+        print(result)
     except futures._base.CancelledError:
-      return
+        return
     requests.put(url, data=json.dumps(result), timeout=3)
 
-@api_view(['Put'])
-def addDiscussion(request):
+
+@api_view(['PUT'])
+def updateStatus(request):
     req_body = json.loads(request.body)
-    if req_body["Server-Token"] == ServerToken:
-        task = executor.submit(get_discussion, req_body)
-        task.add_done_callback(status_callback)        
+
+    if req_body.get("Token") == ServerToken:
+        task = futures.ThreadPoolExecutor().submit(modify_body, req_body)
+        task.add_done_callback(handle_result)
         return Response(status=status.HTTP_200_OK)
     else:
         return Response(status=status.HTTP_403_FORBIDDEN)
