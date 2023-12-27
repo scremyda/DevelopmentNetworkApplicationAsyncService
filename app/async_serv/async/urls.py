@@ -20,5 +20,5 @@ from async_app import views
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('discussion/',views.addDiscussion)
+    path('discussion/',views.updateStatus)
 ]
